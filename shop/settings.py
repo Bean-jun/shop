@@ -117,6 +117,8 @@ USE_L10N = True
 
 USE_TZ = True
 
+# 让django认证系统使用此模型类
+AUTH_USER_MODEL = "user.User"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
