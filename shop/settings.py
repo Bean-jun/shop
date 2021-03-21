@@ -127,3 +127,17 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
 )
+
+# 配置网站运行地址
+WEB_ADDRESS = '127.0.0.1'
+WEB_HOST = '8000'
+# 邮箱配置
+# 由于本项目开源，不想暴露本人密码，故这样做哦
+from EmailPassWord import EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.163.com'
+EMAIL_PORT = 25
+EMAIL_HOST_USER = EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD
+DEFAULT_FROM_EMAIL = "购物商城<{}>".format(EMAIL_HOST_USER)
