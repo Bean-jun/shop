@@ -78,9 +78,7 @@ class RegisterView(View):
                   html_message=send_content)
 
         # 返回应答
-        # todo: 注意goods路由配置的的命名
-        return HttpResponse("register")
-        # return redirect(reverse('goods:index'))
+        return redirect(reverse('user:login'))
 
 
 class ActivateView(View):
@@ -107,9 +105,7 @@ class ActivateView(View):
             else:
                 user.is_active = 1
                 user.save()
-                # todo : 注意账号登录路由配置的命名
-                return HttpResponse('activate')
-                # return redirect(reverse('user:login'))
+                return redirect(reverse('user:login'))
 
 
 class LoginView(View):
@@ -136,7 +132,7 @@ class LoginView(View):
         # 登录处理
         user = authenticate(request, username=username, password=password)
 
-        response = HttpResponse("login")
+        response = redirect(reverse('goods:index'))
 
         if user is not None:
             # 设置cookie
@@ -147,8 +143,11 @@ class LoginView(View):
 
             login(request, user)
 
-        # 返回应答
-        return HttpResponse("login")
+            # 返回应答
+            return response
+        else:
+            # 数据不正确
+            return redirect(reverse('user:register'))
 
 
 class LogoutView(View):
@@ -157,4 +156,4 @@ class LogoutView(View):
     """
     def get(self, request):
         logout(request)
-        return HttpResponse("logout")
+        return redirect(reverse('goods:index'))
