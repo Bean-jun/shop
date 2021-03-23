@@ -4,7 +4,7 @@ from fdfs_client.client import Fdfs_client, get_tracker_conf
 from django.conf import settings
 
 
-class FDFSDstorage(Storage):
+class FDFSStorage(Storage):
     """
     自定义文件存储类
     """
@@ -18,7 +18,7 @@ class FDFSDstorage(Storage):
         # content: 包含上传文件内容的File类的对象
 
         # 获取配置文件
-        path = get_tracker_conf(settings.BASE_DIR + '/utils/fdfs/client.conf')
+        path = get_tracker_conf(settings.FAST_DFS_CONF_PATH)
         
         # 创建一个Fdfs_client对象
         client = Fdfs_client(path)
@@ -40,3 +40,8 @@ class FDFSDstorage(Storage):
     def exists(self, name):
         # Django判断文件名是否可用
         return False
+
+    def url(self, name):
+        # 返回访问文件的URL路径
+        # name: 表中文件的路径ID
+        return settings.FAST_DFS_ADDRESS + str(name)
