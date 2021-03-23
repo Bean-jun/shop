@@ -1,5 +1,7 @@
 from django.db import models
 from utils.BaseModel import BaseModel
+from django.db.models import Sum
+from ckeditor.fields import RichTextField
 
 
 class GoodsType(BaseModel):
@@ -18,18 +20,37 @@ class GoodsType(BaseModel):
     def __str__(self):
         return self.name
 
+    def type_sales(self):
+        # SPU模型商品总销量
+        res = GoodsSKU.count_sales(goods_type=self.name)
+        return res
+
+    type_sales.short_description = "销量"
+
 
 class Goods(BaseModel):
     """
     商品SPU模型类
     """
     name = models.CharField(max_length=100, verbose_name='商品SPU名称')
-    detail = models.CharField(max_length=200, blank=True, verbose_name='商品详情')
+    # detail = models.CharField(max_length=200, blank=True, verbose_name='商品详情')
+    # 添加富文本编辑器
+    detail = RichTextField(blank=True, verbose_name='商品详情')
+
+    def goods_sales(self):
+        # SPU模型商品总销量
+        res = GoodsSKU.count_sales(goods_name=self.name)
+        return res
 
     class Meta:
         db_table = 'shop_goods'
         verbose_name = '商品SPU'
         verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.name
+
+    goods_sales.short_description = "销量"
 
 
 class GoodsSKU(BaseModel):
@@ -58,6 +79,20 @@ class GoodsSKU(BaseModel):
 
     def __str__(self):
         return self.name
+
+    @classmethod
+    def count_sales(cls, goods_type=None, goods_name=None):
+        # type种类的商品总销量， SPU的商品总销量
+        if any([goods_type, goods_name]):
+            if goods_type is None:
+                # 返回SPU的商品总销量
+                res = GoodsSKU.objects.filter(goods__name=goods_name).aggregate(Sum('sales')).get('sales__sum')
+            elif goods_name is None:
+                # 返回type种类的商品总销量
+                res = GoodsSKU.objects.filter(type__name=goods_type).aggregate(Sum('sales')).get('sales__sum')
+        else:
+            res = 0
+        return res
 
 
 class GoodsImage(BaseModel):

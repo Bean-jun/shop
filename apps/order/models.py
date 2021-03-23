@@ -7,10 +7,13 @@ class Transit(BaseModel):
     运费模型类
     """
     TRANSIT_PRICE = (
-        ("包邮", 0),
-        ("不包邮", 10),
+        (0, '包邮'),
+        (10, '不包邮'),
     )
     transit = models.SmallIntegerField(choices=TRANSIT_PRICE, verbose_name="运费")
+
+    def __str__(self):
+        return str(self.transit)
 
 
 class OrderInfo(BaseModel):
@@ -33,7 +36,7 @@ class OrderInfo(BaseModel):
     user = models.ForeignKey("user.User", on_delete=models.CASCADE, verbose_name='用户')
     addr = models.ForeignKey("user.Address", on_delete=models.CASCADE, verbose_name='地址')
     transit_price = models.ForeignKey('Transit', on_delete=models.CASCADE, verbose_name="运费")
-    pay_method  = models.SmallIntegerField(choices=PAY_METHOD, verbose_name="支付方式") 
+    pay_method = models.SmallIntegerField(choices=PAY_METHOD, verbose_name="支付方式")
     total_count = models.IntegerField(default=1, verbose_name="商品数目")
     total_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="商品价格")
     order_status = models.SmallIntegerField(choices=PAY_STATUS, default=1, verbose_name="订单状态")

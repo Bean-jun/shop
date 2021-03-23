@@ -31,6 +31,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'simpleui',
+    'ckeditor',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -158,5 +160,5 @@ DEFAULT_FROM_EMAIL = "购物商城<{}>".format(EMAIL_HOST_USER)
 DEFAULT_FILE_STORAGE = 'utils.fdfs.storage.FDFSStorage'
 # 上传配置文件设置
 FAST_DFS_CONF_PATH = BASE_DIR + '/utils/fdfs/client.conf'
-# 远程fastDFS地址设置
-FAST_DFS_ADDRESS = '139.224.46.213:8888/'
+# 远程fastDFS地址设置,用来拼接图片链接
+FAST_DFS_ADDRESS = 'http://139.224.46.213:8888/'
