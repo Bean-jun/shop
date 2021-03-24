@@ -41,7 +41,7 @@
 	</div>
 
 	<div class="search_bar clearfix">
-		<a href="index.html" class="logo fl"><img src="images/logo.png"></a>
+		<a href="{% url 'goods:index' %}" class="logo fl"><img src="{% static 'images/logo.png' %}"></a>
 		<div class="search_con fl">
 			<input type="text" class="input_text fl" name="" placeholder="搜索商品">
 			<input type="button" class="input_btn fr" name="" value="搜索">
@@ -67,50 +67,68 @@
 
 	<div class="center_con clearfix">
 		<ul class="subnav fl">
-			<li><a href="#model01" class="fruit">新鲜水果</a></li>
-			<li><a href="#model02" class="seafood">海鲜水产</a></li>
+            {% for good_type in goods_type %}
+			<li><a href="#model{{ good_type.id }}" class="{{ good_type.logo }}">{{ good_type.name }}</a></li>
+            {% comment %}
+            <li><a href="#model02" class="seafood">海鲜水产</a></li>
 			<li><a href="#model03" class="meet">猪牛羊肉</a></li>
 			<li><a href="#model04" class="egg">禽类蛋品</a></li>
 			<li><a href="#model05" class="vegetables">新鲜蔬菜</a></li>
 			<li><a href="#model06" class="ice">速冻食品</a></li>
+			{% endcomment %}
+            {% endfor %}
 		</ul>
 		<div class="slide fl">
 			<ul class="slide_pics">
-				<li><img src="images/slide.jpg" alt="幻灯片"></li>
+                {% for goods_banner in goods_banners %}
+				<li><img src="{{ goods_banner.image.url }}" alt="幻灯片"></li>
+                {% endfor %}
+                {% comment %}
 				<li><img src="images/slide02.jpg" alt="幻灯片"></li>
 				<li><img src="images/slide03.jpg" alt="幻灯片"></li>
 				<li><img src="images/slide04.jpg" alt="幻灯片"></li>
+			    {% endcomment %}
 			</ul>
 			<div class="prev"></div>
 			<div class="next"></div>
 			<ul class="points"></ul>
 		</div>
 		<div class="adv fl">
-			<a href="#"><img src="images/adv01.jpg"></a>
-			<a href="#"><img src="images/adv02.jpg"></a>
+            {% for promotion_banner in promotion_banners %}
+			<a href="#"><img src="{{ promotion_banner.image.url }}"></a>
+            {% endfor %}
 		</div>
 	</div>
 
+    {% for good_type in goods_type %}
 	<div class="list_model">
-		<div class="list_title clearfix">
-			<h3 class="fl" id="model01">新鲜水果</h3>
+
+        <div class="list_title clearfix">
+			<h3 class="fl" id="model{{ good_type.id }}">{{ good_type.name }}</h3>
 			<div class="subtitle fl">
 				<span>|</span>
-				<a href="#">鲜芒</a>
+                {% for title_banner in good_type.title_banners %}
+				<a href="{% url 'goods:detail' title_banner.id %}">{{ title_banner.sku.name }}</a>
+                {% comment %}
 				<a href="#">加州提子</a>
 				<a href="#">亚马逊牛油果</a>
+                {% endcomment %}
+                {% endfor %}
 			</div>
 			<a href="#" class="goods_more fr" id="fruit_more">查看更多 ></a>
 		</div>
 
 		<div class="goods_con clearfix">
-			<div class="goods_banner fl"><img src="images/banner01.jpg"></div>
+			<div class="goods_banner fl"><img src="{{ good_type.image.url }}"></div>
 			<ul class="goods_list fl">
+                {% for image_banner in good_type.image_banners %}
 				<li>
-					<h4><a href="#">草莓</a></h4>
-					<a href="#"><img src="images/goods/goods003.jpg"></a>
-					<div class="prize">¥ 30.00</div>
+					<h4><a href="{% url 'goods:detail' image_banner.sku.id %}">{{ image_banner.sku.name }}</a></h4>
+					<a href="{% url 'goods:detail' image_banner.sku.id %}"><img src="{{ image_banner.sku.image.url }}"></a>
+					<div class="prize">¥ {{ image_banner.sku.price }}</div>
 				</li>
+                {% endfor %}
+            {% comment %}
 				<li>
 					<h4><a href="#">葡萄</a></h4>
 					<a href="#"><img src="images/goods/goods002.jpg"></a>
@@ -126,10 +144,13 @@
 					<a href="#"><img src="images/goods/goods012.jpg"></a>
 					<div class="prize">¥ 25.80</div>
 				</li>
+			{% endcomment %}
 			</ul>
 		</div>
 	</div>
 
+    {% endfor %}
+    {% comment %}
 	<div class="list_model">
 		<div class="list_title clearfix">
 			<h3 class="fl" id="model02">海鲜水产</h3>
@@ -323,7 +344,7 @@
 			</ul>
 		</div>
 	</div>
-
+    {% endcomment %}
 	<div class="footer">
 		<div class="foot_link">
 			<a href="#">关于我们</a>
