@@ -162,3 +162,6 @@ DEFAULT_FILE_STORAGE = 'utils.fdfs.storage.FDFSStorage'
 FAST_DFS_CONF_PATH = BASE_DIR + '/utils/fdfs/client.conf'
 # 远程fastDFS地址设置,用来拼接图片链接
 FAST_DFS_ADDRESS = 'http://139.224.46.213:8888/'
+
+# 设置未登录用户重定向
+LOGIN_URL = "/user/login"

@@ -25,5 +25,7 @@ urlpatterns = [
     path('activate/<str:token>', views.ActivateView.as_view(), name="activate"),
     path('login/', views.LoginView.as_view(), name="login"),
     path('logout/', views.LogoutView.as_view(), name="logout"),
-
+    path('info/', views.UserInfoView.as_view(), name="info"),
+    path('site/', views.UserSiteView.as_view(), name="site"),
+    path('order/', views.UserOrderView.as_view(), name="order"),
 ]
