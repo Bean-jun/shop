@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.generic import View
 from django.core.paginator import Paginator
+from django_redis import get_redis_connection
 
 from apps.goods.models import GoodsType, IndexTypeGoodsBanner, IndexPromotionBanner, IndexGoodsBanner, GoodsSKU, Goods
 
@@ -82,6 +83,18 @@ class DetailView(View):
 
         # 获取商品总类型信息
         goods_type = GoodsType.objects.all()
+
+        # 添加用户浏览记录，使用redis中列表结构存储
+        user = request.user
+        if user.is_authenticated:
+            client = get_redis_connection('default')
+            key = "user_use_history_%d" % user.id
+            # 去重
+            client.lrem(key, 0, goods.id)
+            # 添加
+            client.lpush(key, goods.id)
+            # 只保留5条历史记录
+            client.ltrim(key, 0, 4)
 
         context = {
             'goods': goods,

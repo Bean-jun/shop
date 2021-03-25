@@ -1,6 +1,9 @@
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.views.generic import View
+from django_redis import get_redis_connection
+
+from apps.goods.models import GoodsSKU
 from apps.user.models import User, Address
 from django.urls import reverse
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
@@ -19,7 +22,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin   # 对未登录账户
 登录
     实现用户的登录及退出 √
 用户中心
-    用户信息页：显示用户的信息，包括用户名、电话和收货地址 √  用户最近浏览的商品记录
+    用户信息页：显示用户的信息，包括用户名、电话和收货地址 √  用户最近浏览的商品记录 √
     用户地址页：显示用户的默认收货地址，页面下方同时可以增加用户的收货地址 √
     用户订单页：显示用户的订单信息
 其他
@@ -197,11 +200,24 @@ class UserInfoView(LoginRequiredMixin, View):
             address = None
 
         # 浏览记录获取
+        user = request.user
+        goods_id = []
+        if user.is_authenticated:
+            client = get_redis_connection('default')
+            key = 'user_use_history_%d' % user.id
+            goods_id = client.lrange(key, 0, 4)
+
+        # 获取用户浏览记录商品信息
+        user_show_goods = []
+        for i in goods_id:
+            sku = GoodsSKU.objects.get(id=i)
+            user_show_goods.append(sku)
 
         # 组织内容
         context = {
             'address': address,
             'active': True,
+            'user_show_goods': user_show_goods,
         }
 
         return render(request, 'user/user_center_info.html', context)
