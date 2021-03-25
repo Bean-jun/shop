@@ -30,7 +30,7 @@
 					<span>|</span>
 					<a href="{% url 'user:info' %}">用户中心</a>
 					<span>|</span>
-					<a href="cart.html">我的购物车</a>
+					<a href="{% url 'cart:show' %}">我的购物车</a>
 					<span>|</span>
 					<a href="{% url 'user:order' %}">我的订单</a>
 				</div>
@@ -46,7 +46,7 @@
 			<input type="button" class="input_btn fr" name="" value="搜索">
 		</div>
 		<div class="guest_cart fr">
-			<a href="#" class="cart_name fl">我的购物车</a>
+			<a href="{% url 'cart:show' %}" class="cart_name fl">我的购物车</a>
 			<div class="goods_count fl" id="show_count">1</div>
 		</div>
 	</div>
@@ -101,9 +101,10 @@
 			<div class="goods_num clearfix">
 				<div class="num_name fl">数 量：</div>
 				<div class="num_add fl">
-					<input type="text" class="num_show fl" value="1">
+                        {% csrf_token %}
+                    <input type="text" class="num_show fl" value="1">
 					<a href="javascript:;" class="add fr">+</a>
-					<a href="javascript:;" class="minus fr">-</a>	
+					<a href="javascript:;" class="minus fr">-</a>
 				</div>
 
 			</div>
@@ -115,7 +116,7 @@
 			<div class="total">总价：<em>16.80元</em></div>
 			<div class="operate_btn">
 				<a href="javascript:;" class="buy_btn">立即购买</a>
-				<a href="javascript:;" class="add_cart" id="add_cart">加入购物车</a>				
+				<a href="javascript:;" goods_id="{{ goods.id }}" class="add_cart" id="add_cart">加入购物车</a>
 			</div>
 		</div>
 	</div>
@@ -168,7 +169,7 @@
 	</div>
 	<div class="add_jump"></div>
 
-	<script type="text/javascript" src="js/jquery-1.12.2.js"></script>
+	<script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
 	<script type="text/javascript">
 		var $add_x = $('#add_cart').offset().top;
 		var $add_y = $('#add_cart').offset().left;
@@ -177,7 +178,8 @@
 		var $to_y = $('#show_count').offset().left;
 
 		$(".add_jump").css({'left':$add_y+80,'top':$add_x+10,'display':'block'})
-		$('#add_cart').click(function(){
+        {% comment %}
+        $('#add_cart').click(function(){
 			$(".add_jump").stop().animate({
 				'left': $to_y+7,
 				'top': $to_x+7},
@@ -188,6 +190,60 @@
 
 			});
 		})
+		{% endcomment %}
+
+        $(function (){
+            // 获取件数
+            var count = $('.num_show').val();
+
+            // 增加件数
+            $('.num_add').children('.add').click(function (){
+                count = parseInt(count)+1;
+                $('.num_show').val(count);
+            });
+            // 减少件数
+            $('.num_add').children('.minus').click(function (){
+                count = parseInt(count)-1;
+                if (count <= 0){
+                    count = 0;
+                }
+                $('.num_show').val(count);
+            });
+            // 处理添加数据操作
+            $('.add_cart').click(function (){
+                var csrf = $('input[name=csrfmiddlewaretoken]').val();
+                var count = $('.num_show').val();
+                var goods_id = $(this).attr('goods_id')
+                console.log(count);
+
+                params = {'csrfmiddlewaretoken': csrf, 'goods_id': goods_id, 'count': count};
+                $.ajax({
+                    'url': '{% url 'cart:add' %}',
+                    'type': 'post',
+                    'data': params
+                }).done(function (data){
+                    console.log(data.msg);
+                    if (data.msg == 'ok'){
+                        $(".add_jump").stop().animate({
+                            'left': $to_y+7,
+                            'top': $to_x+7},
+                            "fast", function() {
+                                $(".add_jump").fadeOut('fast',function(){
+                                    $('#show_count').html(2);
+                                });
+
+                        });
+                        {#window.location.href = '{% url 'goods:index' %}';#}
+                    }else{
+                        console.log(data.msg);
+                    }
+                }).fail(function (){
+                    console.log("网络超时");
+                })
+            })
+        })
+
+
 	</script>
 	
 </body>
