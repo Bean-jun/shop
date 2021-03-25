@@ -15,6 +15,10 @@ class Transit(BaseModel):
     def __str__(self):
         return str(self.transit)
 
+    class Meta:
+        verbose_name = '运费'
+        verbose_name_plural = verbose_name
+
 
 class OrderInfo(BaseModel):
     """
