@@ -165,3 +165,18 @@ FAST_DFS_ADDRESS = 'http://139.224.46.213:8888/'
 
 # 设置未登录用户重定向
 LOGIN_URL = "/user/login"
+
+# 使用redis配置cache的缓存, 用户存储用户session、购物车记录、浏览记录
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://139.224.46.213:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+# 配置session存储到redis中
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
