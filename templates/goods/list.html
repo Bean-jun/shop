@@ -3,10 +3,9 @@
 {% load staticfiles %}
 <head>
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-	<title>天天生鲜-商品详情</title>
+	<title>天天生鲜-商品列表</title>
 	<link rel="stylesheet" type="text/css" href="{% static 'css/reset.css' %}">
 	<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
-
 </head>
 <body>
 	<div class="header_con">
@@ -35,9 +34,8 @@
 					<a href="{% url 'user:order' %}">我的订单</a>
 				</div>
 			</div>
-		</div>
+		</div>		
 	</div>
-
 
 	<div class="search_bar clearfix">
 		<a href="{% url 'goods:index' %}" class="logo fl"><img src="{% static 'images/logo.png' %}"></a>
@@ -51,14 +49,13 @@
 		</div>
 	</div>
 
-
 	<div class="navbar_con">
 		<div class="navbar clearfix">
 			<div class="subnav_con fl">
 				<h1>全部商品分类</h1>	
 				<span></span>			
 				<ul class="subnav">
-					{% for good_type in goods_type %}
+                    {% for good_type in goods_type %}
                         <li><a href="{% url 'goods:list' good_type.id %}" class="{{ good_type.logo }}">{{ good_type.name }}</a></li>
                         {% comment %}
                         <li><a href="#model02" class="seafood">海鲜水产</a></li>
@@ -84,40 +81,6 @@
 		<a href="#">全部分类</a>
 		<span>></span>
 		<a href="#">新鲜水果</a>
-		<span>></span>
-		<a href="#">商品详情</a>
-	</div>
-
-	<div class="goods_detail_con clearfix">
-		<div class="goods_detail_pic fl"><img src="{{ goods.image.url }}"></div>
-
-		<div class="goods_detail_list fr">
-			<h3>{{ goods.name }}</h3>
-			<p>{{ goods.desc }}</p>
-			<div class="prize_bar">
-				<span class="show_pirze">¥<em>{{ goods.price }}</em></span>
-				<span class="show_unit">单  位：{{ goods.unite }}</span>
-			</div>
-			<div class="goods_num clearfix">
-				<div class="num_name fl">数 量：</div>
-				<div class="num_add fl">
-					<input type="text" class="num_show fl" value="1">
-					<a href="javascript:;" class="add fr">+</a>
-					<a href="javascript:;" class="minus fr">-</a>	
-				</div>
-
-			</div>
-            <div class="goods_num clearfix">
-                    {% for sku in skus %}
-                        <a href="{% url 'goods:detail' sku.id %}">{{ sku.name }}</a>
-                    {% endfor %}
-            </div>
-			<div class="total">总价：<em>16.80元</em></div>
-			<div class="operate_btn">
-				<a href="javascript:;" class="buy_btn">立即购买</a>
-				<a href="javascript:;" class="add_cart" id="add_cart">加入购物车</a>				
-			</div>
-		</div>
 	</div>
 
 	<div class="main_wrap clearfix">
@@ -132,24 +95,66 @@
 						<div class="prize">￥{{ new.price }}</div>
 					</li>
                     {% endfor %}
-
+{#					<li>#}
+{#						<a href="#"><img src="images/goods/goods002.jpg"></a>#}
+{#						<h4><a href="#">玫瑰香葡萄</a></h4>#}
+{#						<div class="prize">￥16.80</div>#}
+{#					</li>#}
 				</ul>
 			</div>
 		</div>
 
 		<div class="r_wrap fr clearfix">
-			<ul class="detail_tab clearfix">
-				<li class="active">商品介绍</li>
-				<li>评论</li>
-			</ul>
-
-			<div class="tab_content">
-				<dl>
-					<dt>商品详情：</dt>
-					<dd>{{ goods.goods.detail|safe }} </dd>
-				</dl>
+			<div class="sort_bar">
+				<a href="{% url 'goods:list' current_type_id.id %}?page=1&sort=default"
+                   {% if sort == 'default' %}
+                   class="active"
+                   {% endif %}
+                >默认</a>
+				<a href="{% url 'goods:list' current_type_id.id %}?page=1&sort=price"
+                    {% if sort == 'price' %}
+                       class="active"
+                    {% endif %}
+                >价格</a>
+				<a href="{% url 'goods:list' current_type_id.id %}?page=1&sort=hot"
+                    {% if sort == 'hot' %}
+                       class="active"
+                    {% endif %}
+                >人气</a>
 			</div>
 
+			<ul class="goods_type_list clearfix">
+                {% for sku in skus %}
+				<li>
+					<a href="{% url 'goods:detail' sku.id %}"><img src="{{ sku.image.url }}"></a>
+					<h4><a href="{% url 'goods:detail' sku.id %}">{{ sku.name }}</a></h4>
+					<div class="operate">
+						<span class="prize">￥{{ sku.price }}</span>
+						<span class="unit">{{ sku.price }}/{{ sku.unite }}</span>
+						<a href="#" class="add_goods" title="加入购物车"></a>
+					</div>
+				</li>
+                {% endfor %}
+
+			</ul>
+
+			<div class="pagenation">
+                {% if skus.has_previous %}
+				<a href="?page={{ skus.previous_page_number }}&sort={{ sort }}"><上一页</a>
+                {% endif %}
+
+                {% for page in page_nums %}
+				    <a href="?page={{ page }}&sort={{ sort }}"
+                       {% if page == skus.number %}
+                            class="active"
+                       {% endif %}>
+                    {{ page }}</a>
+                {% endfor %}
+
+                {% if skus.has_next %}
+				<a href="?page={{ skus.next_page_number }}&sort={{ sort }}">下一页></a>
+                {% endif %}
+			</div>
 		</div>
 	</div>
 
@@ -166,29 +171,6 @@
 		<p>CopyRight © 2016 北京天天生鲜信息技术有限公司 All Rights Reserved</p>
 		<p>电话：010-****888    京ICP备*******8号</p>
 	</div>
-	<div class="add_jump"></div>
-
-	<script type="text/javascript" src="js/jquery-1.12.2.js"></script>
-	<script type="text/javascript">
-		var $add_x = $('#add_cart').offset().top;
-		var $add_y = $('#add_cart').offset().left;
-
-		var $to_x = $('#show_count').offset().top;
-		var $to_y = $('#show_count').offset().left;
-
-		$(".add_jump").css({'left':$add_y+80,'top':$add_x+10,'display':'block'})
-		$('#add_cart').click(function(){
-			$(".add_jump").stop().animate({
-				'left': $to_y+7,
-				'top': $to_x+7},
-				"fast", function() {
-					$(".add_jump").fadeOut('fast',function(){
-						$('#show_count').html(2);
-					});
-
-			});
-		})
-	</script>
 	
 </body>
 </html>
