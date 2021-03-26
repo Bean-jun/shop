@@ -5,6 +5,7 @@ from django.core.paginator import Paginator
 from django_redis import get_redis_connection
 
 from apps.goods.models import GoodsType, IndexTypeGoodsBanner, IndexPromotionBanner, IndexGoodsBanner, GoodsSKU, Goods
+from utils.CartShow import CartInfoShow
 
 """
 首页
@@ -52,10 +53,18 @@ class IndexView(View):
         # 获取首页轮播商品
         goods_banners = IndexGoodsBanner.objects.all()
 
+        # 获取购物车中商品件数
+        user = request.user
+        if user.is_authenticated:
+            count = CartInfoShow()(user.id)
+        else:
+            count = 0
+
         context = {
             'goods_type': goods_type,
             'promotion_banners': promotion_banners,
             'goods_banners': goods_banners,
+            'count': count,
         }
         # 返回首页
         return render(request, 'goods/index.html', context)
@@ -96,11 +105,17 @@ class DetailView(View):
             # 只保留5条历史记录
             client.ltrim(key, 0, 4)
 
+            # 获取购物车中商品件数
+            count = CartInfoShow()(user.id)
+        else:
+            count = 0
+
         context = {
             'goods': goods,
             'new_goods': new_goods,
             'goods_type': goods_type,
             'skus': skus,
+            'count': count,
         }
         # 返回详情页
         return render(request, 'goods/detail.html', context)
@@ -169,6 +184,13 @@ class ListView(View):
         else:
             page_nums = range(page-2, page+3)
 
+        # 获取购物车中商品件数
+        user = request.user
+        if user.is_authenticated:
+            count = CartInfoShow()(user.id)
+        else:
+            count = 0
+
         context = {
             'current_type_id': current_type_id,
             'goods_type': goods_type,
@@ -176,6 +198,7 @@ class ListView(View):
             'new_goods': new_goods, # 新品
             'page_nums': page_nums, # 总页数
             'sort': sort,   # 排序方式
+            'count': count,
         }
 
         return render(request, 'goods/list.html', context)
