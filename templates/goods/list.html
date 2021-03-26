@@ -122,7 +122,7 @@
                     {% endif %}
                 >人气</a>
 			</div>
-
+            {% csrf_token %}
 			<ul class="goods_type_list clearfix">
                 {% for sku in skus %}
 				<li>
@@ -131,7 +131,7 @@
 					<div class="operate">
 						<span class="prize">￥{{ sku.price }}</span>
 						<span class="unit">{{ sku.price }}/{{ sku.unite }}</span>
-						<a href="#" class="add_goods" title="加入购物车"></a>
+						<a href="javascript:;" class="add_goods" id="{{ sku.id }}" title="加入购物车"></a>
 					</div>
 				</li>
                 {% endfor %}
@@ -171,6 +171,35 @@
 		<p>CopyRight © 2016 北京天天生鲜信息技术有限公司 All Rights Reserved</p>
 		<p>电话：010-****888    京ICP备*******8号</p>
 	</div>
-	
+
+    <script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+	<script type="text/javascript">
+        $(function (){
+            // 列表页添加商品进入购物车
+            // 获取商品ID、csrf_token、count=1
+            $('.add_goods').click(function (){
+                var goods_id = $(this).attr('id');
+                var csrf = $('input[name=csrfmiddlewaretoken]').val();
+                params = params = {'csrfmiddlewaretoken': csrf, 'goods_id': goods_id, 'count': 1};
+                $.ajax({
+                    'url': '{% url 'cart:add' %}',
+                    'type': 'post',
+                    'data': params
+                }).done(function (data){
+                    console.log(data.msg);
+                    if (data.msg == 'ok'){
+                        alert('添加成功');
+                        {#window.location.href = '{% url 'goods:index' %}';#}
+                    }else if(data.msg == 'error_stock_not_enough'){
+                        alert("商品库存不足");
+                    }
+                }).fail(function (){
+                    console.log("网络超时");
+                })
+
+
+            })
+        })
+    </script>
 </body>
 </html>

@@ -7,7 +7,7 @@ from django_redis import get_redis_connection
 from apps.goods.models import GoodsSKU
 
 """
-列表页和详情页可以将商品添加到购物车
+列表页和详情页可以将商品添加到购物车 √
 用户登录后，首页、详细页、列表页显示登录用户购物车中的商品数量
 购物车页面：对用户购物车的操作，入选择某种商品，增加、减少商品等等
 """
@@ -21,6 +21,9 @@ class CartInfoView(View):
         # todo: 购物车页面页眉中全部商品，结算的合计及总金额
         # 获取数据
         user = request.user
+        if not user.is_authenticated:
+            return redirect(reverse("user:login"))
+
         client = get_redis_connection('default')
         key = 'user_cart_%d' % user.id
         res_dict = client.hgetall(key)
@@ -73,7 +76,13 @@ class CartAddView(View):
         # 添加购物车, 使用hash表存储
         client = get_redis_connection('default')
         key = 'user_cart_%d' % user.id
-        client.hset(key, sku.id, count)
+        # 商品存在，就添加相关的数量
+        if client.hexists(key, sku.id):
+            # 存在即直接添加count个数量
+            client.hincrby(key, sku.id, count)
+        else:
+            # 商品不存在，直接添加商品内容
+            client.hset(key, sku.id, count)
 
         # 返回应答
         return JsonResponse({'msg': 'ok'})

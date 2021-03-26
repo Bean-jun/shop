@@ -171,14 +171,7 @@
 
 	<script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
 	<script type="text/javascript">
-		var $add_x = $('#add_cart').offset().top;
-		var $add_y = $('#add_cart').offset().left;
-
-		var $to_x = $('#show_count').offset().top;
-		var $to_y = $('#show_count').offset().left;
-
-		$(".add_jump").css({'left':$add_y+80,'top':$add_x+10,'display':'block'})
-        {% comment %}
+		{% comment %}
         $('#add_cart').click(function(){
 			$(".add_jump").stop().animate({
 				'left': $to_y+7,
@@ -204,17 +197,26 @@
             // 减少件数
             $('.num_add').children('.minus').click(function (){
                 count = parseInt(count)-1;
-                if (count <= 0){
-                    count = 0;
+                if (count < 0){
+                    count = 1;
                 }
                 $('.num_show').val(count);
             });
+            // 手动输入件数
+            $('.num_show').blur(function (){
+                count = $(this).prop('value');
+                if(count<0){
+                    count = 1;
+                }
+                $('.num_show').val(count);
+            })
+
             // 处理添加数据操作
             $('.add_cart').click(function (){
                 var csrf = $('input[name=csrfmiddlewaretoken]').val();
                 var count = $('.num_show').val();
                 var goods_id = $(this).attr('goods_id')
-                console.log(count);
+                console.log(csrf+':'+count+':'+goods_id);
 
                 params = {'csrfmiddlewaretoken': csrf, 'goods_id': goods_id, 'count': count};
                 $.ajax({
@@ -224,18 +226,10 @@
                 }).done(function (data){
                     console.log(data.msg);
                     if (data.msg == 'ok'){
-                        $(".add_jump").stop().animate({
-                            'left': $to_y+7,
-                            'top': $to_x+7},
-                            "fast", function() {
-                                $(".add_jump").fadeOut('fast',function(){
-                                    $('#show_count').html(2);
-                                });
-
-                        });
+                        alert('添加成功');
                         {#window.location.href = '{% url 'goods:index' %}';#}
-                    }else{
-                        console.log(data.msg);
+                    }else if(data.msg == 'error_stock_not_enough'){
+                        alert("商品库存不足");
                     }
                 }).fail(function (){
                     console.log("网络超时");
