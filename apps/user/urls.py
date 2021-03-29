@@ -27,5 +27,5 @@ urlpatterns = [
     path('logout/', views.LogoutView.as_view(), name="logout"),
     path('info/', views.UserInfoView.as_view(), name="info"),
     path('site/', views.UserSiteView.as_view(), name="site"),
-    path('order/', views.UserOrderView.as_view(), name="order"),
+    path('order/<int:page>', views.UserOrderView.as_view(), name="order"),
 ]
