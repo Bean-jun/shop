@@ -31,7 +31,7 @@
 					<span>|</span>
 					<a href="{% url 'cart:show' %}">我的购物车</a>
 					<span>|</span>
-					<a href="{% url 'user:order' %}">我的订单</a>
+					<a href="{% url 'user:order' 1 %}">我的订单</a>
 				</div>
 			</div>
 		</div>
@@ -44,7 +44,7 @@
 			<input type="button" class="input_btn fr" name="" value="搜索">
 		</div>		
 	</div>
-	
+
 	<h3 class="common_title">确认收货地址</h3>
 
 	<div class="common_list_con clearfix">
@@ -61,11 +61,11 @@
 	<h3 class="common_title">支付方式</h3>	
 	<div class="common_list_con clearfix">
 		<div class="pay_style_con clearfix">
-			<input type="radio" name="pay_style" checked>
+			<input type="radio" name="pay_style" checked value="2">
 			<label class="weixin">微信支付</label>
-			<input type="radio" name="pay_style">
+			<input type="radio" name="pay_style" value="1">
 			<label class="zhifubao"></label>
-			<input type="radio" name="pay_style">
+			<input type="radio" name="pay_style" value="3">
 			<label class="bank">银行卡支付</label>
 		</div>
 	</div>
@@ -98,14 +98,15 @@
 	<div class="common_list_con clearfix">
 		<div class="settle_con">
 			<div class="total_goods_count">共<em>{{ total_count }}</em>件商品，总金额<b>{{ total_amount }}元</b></div>
-			<div class="transit">运费：<b>{{ transit }}元</b></div>
+			<div class="transit" transit="{{ transit.id }}">运费：<b>{{ transit.transit }}元</b></div>
 			<div class="total_pay">实付款：<b>{{ total_pay }}元</b></div>
 		</div>
 	</div>
 
 	<div class="order_submit clearfix">
-		<a href="javascript:;" id="order_btn">提交订单</a>
-	</div>	
+        {% csrf_token %}
+		<a href="javascript:;" goods_ids="{{ goods_id }}" id="order_btn">提交订单</a>
+	</div>
 
 	<div class="footer">
 		<div class="foot_link">
@@ -131,17 +132,44 @@
 	<script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
 	<script type="text/javascript">
 		$('#order_btn').click(function() {
-			localStorage.setItem('order_finish',2);
+		    // 获取地址
+            addr = $('input[name="addr_id"]:checked').val();
+            // 获取支付方式
+            pay_method = $('input[name="pay_style"]:checked').val();
+            // 获取商品ID
+            goods_ids = $(this).attr('goods_ids');
+            // 获取邮费ID
+            transit_id = $('.transit').attr('transit');
+            // 获取csrf_token
+            csrf = $('input[name=csrfmiddlewaretoken]').val();
+            params = {'addr': addr, 'pay_method': pay_method, 'goods_ids': goods_ids, 'transit_id': transit_id, 'csrfmiddlewaretoken': csrf}
 
-			$('.popup_con').fadeIn('fast', function() {
+            $.ajax({
+                'url': '{% url 'order:create' %}',
+                'type': 'post',
+                'data': params
+            }).done(function (data){
+                console.log(data.msg)
 
-				setTimeout(function(){
-					$('.popup_con').fadeOut('fast',function(){
-						window.location.href = 'index.html';
-					});	
-				},3000)
-				
-			});
+                if (data.msg == 'ok'){
+                    localStorage.setItem('order_finish',2);
+
+                    $('.popup_con').fadeIn('fast', function() {
+
+                        setTimeout(function(){
+                            $('.popup_con').fadeOut('fast',function(){
+                                window.location.href = '{% url 'user:order' 1 %}';
+                            });
+                        },3000)
+
+                    });
+                }else{
+                    alert(data.msg);
+                }
+            }).fail(function (){
+                alert("网络超时！")
+            })
+
 		});
 	</script>
 </body>

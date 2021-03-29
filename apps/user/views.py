@@ -1,9 +1,11 @@
+from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.views.generic import View
 from django_redis import get_redis_connection
 
 from apps.goods.models import GoodsSKU
+from apps.order.models import OrderInfo, OrderGoods
 from apps.user.models import User, Address
 from django.urls import reverse
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
@@ -24,7 +26,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin   # 对未登录账户
 用户中心
     用户信息页：显示用户的信息，包括用户名、电话和收货地址 √  用户最近浏览的商品记录 √
     用户地址页：显示用户的默认收货地址，页面下方同时可以增加用户的收货地址 √
-    用户订单页：显示用户的订单信息
+    用户订单页：显示用户的订单信息 √
 其他
     待补充
 """
@@ -289,9 +291,55 @@ class UserOrderView(LoginRequiredMixin, View):
     """
     用户订单页
     """
-    def get(self, request):
+    def get(self, request, page):
+        user = request.user
+        if not user.is_authenticated:
+            return redirect(reverse('user:login'))
+
+        # 获取订单内容
+        orders = OrderInfo.objects.filter(user=user).order_by('-create_time')
+
+
+        for order in orders:
+
+            order_goods = OrderGoods.objects.filter(order=order)
+
+            for goods in order_goods:
+                amount = goods.price * goods.count
+
+                setattr(goods, 'amount', amount)
+
+            setattr(order, 'order_goods', order_goods)
+            setattr(order, 'status', dict(OrderInfo.PAY_STATUS)[order.pay_method])
+
+        # 分页显示
+        paginator = Paginator(orders, 4)
+
+        try:
+            page = int(page)
+        except:
+            page = 1
+
+        try:
+            orders = paginator.page(page)
+        except Exception as e:
+            orders = paginator.page(1)
+
+        # 获取总页数
+        num_pages = paginator.num_pages
+        if num_pages < 5:
+            page_nums = range(1, num_pages + 1)
+        elif page <= 3:
+            page_nums = range(1, 6)
+        elif num_pages - page <= 2:
+            page_nums = range(num_pages - 3, num_pages + 1)
+        else:
+            page_nums = range(page - 2, page + 3)
+
         # 组织内容
         context = {
+            'orders': orders,
+            'page_nums': page_nums,
             'active': True,
         }
         return render(request, 'user/user_center_order.html', context)
