@@ -11,13 +11,15 @@ from apps.goods.models import GoodsSKU
 from apps.order.models import Transit, OrderInfo, OrderGoods
 from apps.user.models import Address
 from django.db import transaction
+from django.conf import settings
+from apps.order.Payment.PaymentByAlipay import AliPayment
 
 
 """
 提交订单的页面：显示用户准备购买的商品 √
 点击提交订单时完成订单的创建 √
 用户中心显示订单信息 √
-点击支付完成支付
+点击支付完成支付 √
 """
 
 
@@ -190,3 +192,40 @@ class OrderCreateView(View):
 
         # 返回应答
         return JsonResponse({'msg': 'ok'})
+
+
+class OrderPayView(View):
+    """
+    用户支付
+    """
+    def post(self, request):
+        # 获取数据内容
+        order_id = request.POST.get('order_id')
+
+        try:
+            order = OrderInfo.objects.get(order_id=order_id)
+        except OrderInfo.DoesNotExist:
+            return JsonResponse({'msg': '订单不存在'})
+
+        if order.order_status == 1:
+            # 订单未交易成功
+            if order.pay_method == 1:
+                # 支付宝接口调用
+                payment = AliPayment(appid=settings.APPID)
+                url = payment.get_pay(order.order_id,
+                                      order.total_price,
+                                      '支付宝')
+                return JsonResponse({'msg': 1000, 'url': url})
+
+            elif order.pay_method == 2:
+                # 微信接口调用
+                return JsonResponse({'msg': '接口调用完善中'})
+
+            elif order.pay_method == 3:
+                # 银行卡接口调用
+                return JsonResponse({'msg': '接口调用完善中'})
+
+            # todo: 异步调用订单支付结果查询并修改数据库
+
+        else:
+            return JsonResponse({'msg': '支付成功'})

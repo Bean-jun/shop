@@ -180,3 +180,6 @@ CACHES = {
 # 配置session存储到redis中
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
+
+# 配置支付宝APPID
+APPID = '2021000117623733'
