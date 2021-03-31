@@ -6,6 +6,7 @@
 	<title>天天生鲜-用户中心</title>
 	<link rel="stylesheet" type="text/css" href="{% static 'css/reset.css' %}">
 	<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+    <script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
 </head>
 <body>
 	<div class="header_con">
@@ -82,7 +83,8 @@
 
 							<td width="15%">{{ order.total_price }}元</td>
 							<td width="15%">{{ order.status }}</td>
-							<td width="15%"><a href="#" class="oper_btn">去付款</a></td>
+                            {% csrf_token %}
+							<td width="15%"><a href="#" id="{{ order.order_id }}" class="oper_btn">去付款</a></td>
 						</tr>
 
 					</tbody>
@@ -125,6 +127,30 @@
 		<p>CopyRight © 2016 北京天天生鲜信息技术有限公司 All Rights Reserved</p>
 		<p>电话：010-****888    京ICP备*******8号</p>
 	</div>
-	
+	<script type="text/javascript">
+        // 提交付款
+        $(function (){
+            $('.oper_btn').click(function (){
+                order_id = $(this).attr('id');
+                csrf = $('input[name=csrfmiddlewaretoken]').val();
+                params =  params = {'csrfmiddlewaretoken': csrf, 'order_id': order_id};
+                $.ajax({
+                        'url': '{% url 'order:pay' %}',
+                        'type': 'post',
+                        'data': params
+                        }).done(function (data){
+                            if (data.msg === 1000) {
+                                window.open(data.url);
+                                }
+                            else(
+                                alert(data.msg)
+                            )
+                        }).fail(function (){
+                            console.log("网络超时");
+                        })
+            })
+        })
+
+    </script>
 </body>
 </html>

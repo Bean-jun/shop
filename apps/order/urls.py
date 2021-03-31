@@ -22,4 +22,5 @@ app_name = 'order'
 urlpatterns = [
     path('place/', views.OrderPlaceView.as_view(), name='place'),
     path('create/', views.OrderCreateView.as_view(), name="create"),
+    path('pay/', views.OrderPayView.as_view(), name="pay"),
 ]
