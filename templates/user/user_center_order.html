@@ -1,0 +1,156 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+{% load staticfiles %}
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>天天生鲜-用户中心</title>
+	<link rel="stylesheet" type="text/css" href="{% static 'css/reset.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+    <script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+</head>
+<body>
+	<div class="header_con">
+		<div class="header">
+			<div class="welcome fl">欢迎来到天天生鲜!</div>
+			<div class="fr">
+                {% if user.is_authenticated %}
+				<div class="login_btn fl">
+					欢迎您：<em>{{ user.username }}</em>
+                    <span>|</span>
+					<a href="{% url 'user:logout' %}">退出</a>
+				</div>
+                {% else %}
+				<div class="login_btn fl">
+					<a href="{% url 'user:login' %}">登录</a>
+					<span>|</span>
+					<a href="{% url 'user:register' %}">注册</a>
+				</div>
+                {% endif %}
+				<div class="user_link fl">
+					<span>|</span>
+					<a href="{% url 'user:info' %}">用户中心</a>
+					<span>|</span>
+					<a href="{% url 'cart:show' %}">我的购物车</a>
+					<span>|</span>
+					<a href="{% url 'user:order' 1 %}">我的订单</a>
+				</div>
+			</div>
+		</div>		
+	</div>
+
+	<div class="search_bar clearfix">
+		<a href="{% url 'goods:index' %}" class="logo fl"><img src="{% static 'images/logo.png' %}"></a>
+		<div class="sub_page_name fl">|&nbsp;&nbsp;&nbsp;&nbsp;用户中心</div>
+		<div class="search_con fr">
+			<input type="text" class="input_text fl" name="" placeholder="搜索商品">
+			<input type="button" class="input_btn fr" name="" value="搜索">
+		</div>		
+	</div>
+
+	<div class="main_con clearfix">
+		<div class="left_menu_con clearfix">
+			<h3>用户中心</h3>
+			<ul>
+				<li><a href="{% url 'user:info' %}" >· 个人信息</a></li>
+				<li><a href="{% url 'user:order' 1 %}" {% if active %}class="active" {% endif %}>· 全部订单</a></li>
+				<li><a href="{% url 'user:site' %}">· 收货地址</a></li>
+			</ul>
+		</div>
+		<div class="right_content clearfix">
+				<h3 class="common_title2">全部订单</h3>
+            {% for order in orders %}
+				<ul class="order_list_th w978 clearfix">
+					<li class="col01">{{ order.create_time }}</li>
+					<li class="col02">订单号：{{ order.order_id }}</li>
+					<li class="col02 stress">{{ order.status }}</li>
+				</ul>
+
+				<table class="order_list_table w980">
+					<tbody>
+
+						<tr>
+
+							<td width="55%">
+                                {% for order_goods in order.order_goods %}
+								<ul class="order_goods_list clearfix">					
+									<li class="col01"><img src="{{ order_goods.sku.image.url }}"></li>
+									<li class="col02">{{ order_goods.sku.name }}<em>{{ order_goods.sku.price }}元/{{ order_goods.sku.unite }}g</em></li>
+									<li class="col03">{{ order_goods.count }}</li>
+									<li class="col04">{{ order_goods.amount }}元</li>
+								</ul>
+                                {% endfor %}
+							</td>
+
+							<td width="15%">{{ order.total_price }}元</td>
+							<td width="15%">{{ order.status }}</td>
+                            {% csrf_token %}
+							<td width="15%"><a href="#" id="{{ order.order_id }}" class="oper_btn">{{ order.status }}</a></td>
+						</tr>
+
+					</tbody>
+				</table>
+
+            {% endfor %}
+
+				<div class="pagenation">
+                {% if orders.has_previous %}
+				<a href="{% url 'user:order' orders.previous_page_number %}"><上一页</a>
+                {% endif %}
+
+                {% for page in page_nums %}
+				    <a href="{% url 'user:order' page %}"
+                       {% if page == orders.number %}
+                            class="active"
+                       {% endif %}>
+                    {{ page }}</a>
+                {% endfor %}
+
+                {% if orders.has_next %}
+				<a href="{% url 'user:order' orders.next_page_number %}">下一页></a>
+                {% endif %}
+                </div>
+		</div>
+	</div>
+
+
+
+	<div class="footer">
+		<div class="foot_link">
+			<a href="#">关于我们</a>
+			<span>|</span>
+			<a href="#">联系我们</a>
+			<span>|</span>
+			<a href="#">招聘人才</a>
+			<span>|</span>
+			<a href="#">友情链接</a>		
+		</div>
+		<p>CopyRight © 2016 北京天天生鲜信息技术有限公司 All Rights Reserved</p>
+		<p>电话：010-****888    京ICP备*******8号</p>
+	</div>
+	<script type="text/javascript">
+        // 提交付款
+        $(function (){
+            $('.oper_btn').click(function (){
+                order_id = $(this).attr('id');
+                csrf = $('input[name=csrfmiddlewaretoken]').val();
+                params =  params = {'csrfmiddlewaretoken': csrf, 'order_id': order_id};
+                $.ajax({
+                        'url': '{% url 'order:pay' %}',
+                        'type': 'post',
+                        'data': params
+                        }).done(function (data){
+                            if (data.msg === 1000) {
+                                window.open(data.url);
+                                }
+                            else(
+                                alert(data.msg)
+                            )
+                        }).fail(function (){
+                            console.log("网络超时");
+                        })
+            })
+        })
+
+    </script>
+</body>
+</html>

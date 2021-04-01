@@ -1,3 +1,7 @@
 .idea/
 __pycache__/
 .vscode
+db.sqlite3
+EmailPassWord.py
+/apps/order/Payment/Cryptography/
+/whoosh_index/
