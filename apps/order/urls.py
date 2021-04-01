@@ -23,4 +23,5 @@ urlpatterns = [
     path('place/', views.OrderPlaceView.as_view(), name='place'),
     path('create/', views.OrderCreateView.as_view(), name="create"),
     path('pay/', views.OrderPayView.as_view(), name="pay"),
+    path('update/', views.OrderUpdateView.as_view(), name='update'),
 ]
