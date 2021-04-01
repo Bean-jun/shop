@@ -302,7 +302,7 @@ class UserOrderView(LoginRequiredMixin, View):
                 setattr(goods, 'amount', amount)
 
             setattr(order, 'order_goods', order_goods)
-            setattr(order, 'status', dict(OrderInfo.PAY_STATUS)[order.pay_method])
+            setattr(order, 'status', dict(OrderInfo.PAY_STATUS)[order.order_status])
 
         # 分页显示
         paginator = Paginator(orders, 4)
