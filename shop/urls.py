@@ -26,6 +26,7 @@ from django.urls import include, path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('search/', include('haystack.urls')),
     path('user/', include('apps.user.urls', namespace='user')),
     path('cart/', include('apps.cart.urls', namespace='cart')),
     path('order/', include('apps.order.urls', namespace='order')),
