@@ -231,7 +231,7 @@ class OrderPayView(View):
                 # 银行卡接口调用
                 return JsonResponse({'msg': '接口调用完善中'})
         else:
-            return JsonResponse({'msg': '支付成功'})
+            return JsonResponse({'msg': '支付成功,其他接口完善中...'})
 
 
 @method_decorator(csrf_exempt, name='dispatch')     # 避免支付宝notify_url异步post请求被中间件阻止

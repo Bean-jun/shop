@@ -186,6 +186,15 @@
 		{% endcomment %}
 
         $(function (){
+            //更新页面显示
+            function update_page(){
+                count = $('.num_show').val();
+                price = $('.show_pirze').children('em').html();
+                res = parseFloat(price) * parseInt(count);
+                $('.total').children('em').html(res);
+            };
+
+            update_page();
             // 获取件数
             var count = $('.num_show').val();
 
@@ -193,6 +202,7 @@
             $('.num_add').children('.add').click(function (){
                 count = parseInt(count)+1;
                 $('.num_show').val(count);
+                update_page();
             });
             // 减少件数
             $('.num_add').children('.minus').click(function (){
@@ -201,6 +211,7 @@
                     count = 1;
                 }
                 $('.num_show').val(count);
+                update_page();
             });
             // 手动输入件数
             $('.num_show').blur(function (){
@@ -209,6 +220,7 @@
                     count = 1;
                 }
                 $('.num_show').val(count);
+                update_page();
             })
 
             // 处理添加数据操作

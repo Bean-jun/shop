@@ -84,7 +84,7 @@
 							<td width="15%">{{ order.total_price }}元</td>
 							<td width="15%">{{ order.status }}</td>
                             {% csrf_token %}
-							<td width="15%"><a href="#" id="{{ order.order_id }}" class="oper_btn">去付款</a></td>
+							<td width="15%"><a href="#" id="{{ order.order_id }}" class="oper_btn">{{ order.status }}</a></td>
 						</tr>
 
 					</tbody>
