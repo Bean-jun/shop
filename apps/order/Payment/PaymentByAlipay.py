@@ -55,12 +55,14 @@ class AliPayment():
         )
         return alipay
 
-    def get_pay(self, out_trade_no, total_amount, subject):
+    def get_pay(self, out_trade_no, total_amount, subject, return_url=None, notify_url=None):
         '''
         获取交易链接
         :param out_trade_no: 订单ID
         :param total_amount: 订单费用
         :param subject: 订单主题
+        :param return_url: 可选, 同步通知订单状态 get请求
+        :param notify_url: 可选, 异步通知订单状态 post请求
         :return: 订单链接
         '''
         alipay = self._alipay()
@@ -68,22 +70,24 @@ class AliPayment():
             out_trade_no=out_trade_no,  # 订单id
             total_amount=str(total_amount),  # 支付总金额
             subject='订单交易%s' % subject,
-            # return_url=None,  # 可选, 同步通知订单状态
-            # notify_url=None  # 可选, 异步通知订单状态
+            return_url=return_url,  # 可选, 同步通知订单状态
+            notify_url=notify_url  # 可选, 异步通知订单状态
         )
         if self.debug is True:
             return 'https://openapi.alipaydev.com/gateway.do?' + order_string
         else:
             return 'https://openapi.alipay.com/gateway.do?' + order_string
 
-    def get_res(self, out_trade_no):
+    def get_res(self, params, signature):
         '''
         订单结果获取
-        :param out_trade_no: 订单ID
-        :return: 返回订单结果状态码及状态
+        :param signature: 支付宝sign
+        :param params: 支付宝返回数据
+        :return: 返回订单结果状态码及接口数据
         '''
         alipay = self._alipay()
-        res_dict = alipay.api_alipay_trade_query(out_trade_no)
-        code = res_dict.get('code')
-        status = res_dict.get('trade_status')
-        return code, status
+
+        # 校验数据内容, True表明为支付宝回传数据
+        status = alipay.verify(params, signature)
+
+        return status
