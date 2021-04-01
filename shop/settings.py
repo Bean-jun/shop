@@ -183,3 +183,6 @@ SESSION_CACHE_ALIAS = "default"
 
 # 配置支付宝APPID
 APPID = '2021000117623733'
+
+# 异步事件celery配置redis地址
+CELERY_ADDRESS = 'redis://139.224.46.213:6379/3'

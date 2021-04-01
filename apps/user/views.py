@@ -89,7 +89,7 @@ class RegisterView(View):
         token = res.dumps({'id': user.id, 'username': user.username}).decode()
 
         # 发送邮件
-        user_register_mail(user, token).delay()
+        user_register_mail.delay(username, email, token)
 
         # 返回应答
         return redirect(reverse('user:login'))
