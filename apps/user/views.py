@@ -14,6 +14,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin   # 对未登录账户限制访问
+from EventDispatch.tasks import user_register_mail
 
 
 """
@@ -86,18 +87,9 @@ class RegisterView(View):
         # 产生秘钥
         res = Serializer(secret_key=settings.SECRET_KEY, expires_in=20 * 60)
         token = res.dumps({'id': user.id, 'username': user.username}).decode()
-        send_content = f"""欢迎您{user.username},恭喜您成为本商城会员🤣.<br />
-                        请点击以下链接完成账户激活<br />
-                        <a href="http:{settings.WEB_ADDRESS}:{settings.WEB_HOST}/user/activate/{token}">
-                        http:{settings.WEB_ADDRESS}:{settings.WEB_HOST}/user/activate/{token}</a>"""
 
         # 发送邮件
-        subject = "购物商城欢迎您"
-        send_mail(subject=subject,
-                  message='',
-                  from_email=settings.DEFAULT_FROM_EMAIL,
-                  recipient_list=[email],
-                  html_message=send_content)
+        user_register_mail(user, token).delay()
 
         # 返回应答
         return redirect(reverse('user:login'))
