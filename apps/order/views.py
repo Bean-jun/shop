@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.generic import View
@@ -12,6 +12,8 @@ from apps.order.models import Transit, OrderInfo, OrderGoods
 from apps.user.models import Address
 from django.db import transaction
 from django.conf import settings
+from django.utils.decorators import method_decorator    # 对类进行装饰
+from django.views.decorators.csrf import csrf_exempt
 from apps.order.Payment.PaymentByAlipay import AliPayment
 
 
@@ -40,7 +42,6 @@ class OrderPlaceView(LoginRequiredMixin, View):
 
         address = Address.objects.filter(user=user)
 
-
         client = get_redis_connection('default')
         key = 'user_cart_%d' % user.id
 
@@ -54,12 +55,12 @@ class OrderPlaceView(LoginRequiredMixin, View):
             goods_num = client.hget(key, id).decode()
 
             setattr(sku, 'goods_num', goods_num)
-            setattr(sku, 'amount', sku.price*int(goods_num))
+            setattr(sku, 'amount', sku.price * int(goods_num))
 
             skus.append(sku)
 
             total_count += int(goods_num)
-            total_amount += sku.price*int(goods_num)
+            total_amount += sku.price * int(goods_num)
 
         max_transit = Transit.objects.aggregate(Max('transit')).get('transit__max')
         if total_amount < max_transit:
@@ -68,7 +69,6 @@ class OrderPlaceView(LoginRequiredMixin, View):
             transit = Transit.objects.get(transit=0)
 
         total_pay = total_amount + transit.transit
-
 
         # 返回应答
         context = {
@@ -87,6 +87,7 @@ class OrderCreateView(View):
     """
     订单创建
     """
+
     @transaction.atomic
     def post(self, request):
         user = request.user
@@ -211,11 +212,16 @@ class OrderPayView(View):
             # 订单未交易成功
             if order.pay_method == 1:
                 # 支付宝接口调用
+                callback_url = 'http://' + settings.WEB_ADDRESS + ':' + settings.WEB_HOST + reverse('order:update')
                 payment = AliPayment(appid=settings.APPID)
-                url = payment.get_pay(order.order_id,
-                                      order.total_price,
-                                      '支付宝')
-                return JsonResponse({'msg': 1000, 'url': url})
+                pay_url = payment.get_pay(order.order_id,
+                                          order.total_price,
+                                          order.order_id,
+                                          return_url=callback_url,
+                                          notify_url=callback_url
+                                          )
+
+                return JsonResponse({'msg': 1000, 'url': pay_url})
 
             elif order.pay_method == 2:
                 # 微信接口调用
@@ -224,8 +230,74 @@ class OrderPayView(View):
             elif order.pay_method == 3:
                 # 银行卡接口调用
                 return JsonResponse({'msg': '接口调用完善中'})
-
-            # todo: 异步调用订单支付结果查询并修改数据库
-
         else:
             return JsonResponse({'msg': '支付成功'})
+
+
+@method_decorator(csrf_exempt, name='dispatch')     # 避免支付宝notify_url异步post请求被中间件阻止
+class OrderUpdateView(View):
+    """
+    订单数据更新
+    """
+
+    def get(self, request):
+        '''
+        支付宝中return_url=None对应跳转请求
+        '''
+        # TODO：部署上线时，这部分代码应该注释掉，仅仅保留return部分
+        params = request.GET.dict()
+        signature = params.pop("sign")
+        payment = AliPayment(appid=settings.APPID)
+        try:
+            status = payment.get_res(params, signature)
+        except Exception as e:
+            status = False
+
+        # 校验支付结果
+        if status == True:
+            # 处理后台数据
+            order_id = params.get('out_trade_no', None)
+            trade_no = params.get('trade_no', None)
+            try:
+                order = OrderInfo.objects.get(order_id=order_id)
+            except OrderInfo.DoesNotExist:
+                pass
+            else:
+                order.order_status = 2
+                order.order_pay_id = trade_no
+                order.save()
+
+        # 返回应答
+        return redirect(reverse('user:order', args=(1,)))
+
+    def post(self, request):
+        '''
+        支付宝中 notify_url=None对应跳转请求
+        post方式
+        返回值为success时，支付宝才不会一直发生请求回传数据
+        该部分需要使用公网IP地址
+        '''
+        params = request.POST.dict()
+        signature = params.pop("sign")
+        payment = AliPayment(appid=settings.APPID)
+        try:
+            status = payment.get_res(params, signature)
+        except Exception as e:
+            status = False
+
+        # 校验支付结果
+        if status == True:
+            # 处理后台数据
+            order_id = params.get('out_trade_no', None)
+            trade_no = params.get('trade_no', None)
+            try:
+                order = OrderInfo.objects.get(order_id=order_id)
+            except OrderInfo.DoesNotExist:
+                pass
+            else:
+                order.order_status = 2
+                order.order_pay_id = trade_no
+                order.save()
+
+        # 给支付宝返回应答
+        return HttpResponse('success')

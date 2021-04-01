@@ -10,7 +10,7 @@ class TransitAdmin(admin.ModelAdmin):
 
 @admin.register(OrderInfo)
 class OrderInfoAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['user', 'addr', 'pay_method', 'total_price', 'total_count', 'order_status', 'order_pay_id']
 
 
 @admin.register(OrderGoods)
